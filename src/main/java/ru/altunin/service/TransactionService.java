@@ -31,6 +31,11 @@ public class TransactionService {
     public void start(String totalTransactions) {
         for (int i = 0; i < Integer.parseInt(totalTransactions); i++) {
             threadPool.execute(() -> {
+                try {
+                    Thread.sleep(Utility.getRandomDelay());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 int[] accountPair = Utility.getRandomPairByLimit(getTotalAccounts());
                 service.makeShuffleTransactionsWithRandomAmount(accountList, accountPair);
             });

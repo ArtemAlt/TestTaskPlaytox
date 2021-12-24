@@ -20,37 +20,26 @@ public class AccountService {
     public void makeTransactionalFromTo(Account sender, Account receiver, BigDecimal amount) {
         logger.info("Начата транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции - " + amount + ". В потоке - " + Thread.currentThread().getName());
         try {
-            if (amount != null && amount.signum() < 0) throw new BadAmountException("Неверная сумма перевода");
-            Thread.sleep(Utility.getRandomDelay());
+            if (amount == null && amount.signum() < 0) throw new BadAmountException("Неверная сумма перевода");
             makeDebit(sender, receiver, amount);
             logger.info("Завершена транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". В потоке - " + Thread.currentThread().getName());
         } catch (LimitAccountException e) {
             logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена");
-        } catch (InterruptedException e) {
-            logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена по таймауту");
         } catch (BadAmountException e) {
             logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Некорректная сумма перевода");
+        } catch (InterruptedException e) {
+            logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена по таймауту");
         }
     }
 
-    private void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException {
+    private synchronized void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException, InterruptedException {
         logger.info("Начат перевод средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount);
         List<Account> accounts = new ArrayList<>();
         accounts.add(receiver);
         accounts.add(sender);
         accounts.sort(comparator);
         if (!accounts.get(0).isLock() && !accounts.get(1).isLock()) {
-            sender.makeDebit(amount);
-            receiver.makeEnrolment(amount);
-        } else {
-            synchronized (Thread.currentThread()) {
-                try {
-                    Thread.currentThread().wait();
-                } catch (InterruptedException e) {
-                    logger.error("Внутренняя ошибка транзакции: " + Arrays.toString(e.getStackTrace()));
-                }
-            }
-
+            receiver.makeEnrolment(sender.makeDebit(amount));
         }
         logger.info("Завершен перевод средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " итоговый счет аккаунта отправителя - " + sender.getCurrentAmount() + " Итоговый счет аккаунта получателя - " + receiver.getCurrentAmount());
     }
