@@ -23,7 +23,7 @@ public class AccountService {
             makeDebit(sender, receiver, amount);
             logger.info("Завершена транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". В потоке - " + Thread.currentThread().getName());
         } catch (LimitAccountException e) {
-            logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена");
+            logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Не достаточно средств на счете отправителя");
         } catch (BadAmountException e) {
             logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Некорректная сумма перевода");
         }
