@@ -2,10 +2,10 @@ package ru.altunin.entity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.altunin.errors.LimitAccountException;
 import ru.altunin.util.Utility;
 
 import java.math.BigDecimal;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -52,7 +52,7 @@ public class Account {
         }
     }
 
-    public BigDecimal makeDebit(BigDecimal amount) {
+    public BigDecimal makeDebit(BigDecimal amount) throws LimitAccountException {
         BigDecimal result = BigDecimal.valueOf(0);
         try {
             if (lock.tryLock()) {
@@ -60,6 +60,7 @@ public class Account {
                 if (newAccountMoneyValue.signum() < 0) {
                     this.isLocked = false;
                     logger.info("Недостаточно средств на счете " + this.getId());
+                    throw new LimitAccountException("Недостаточно средств на счете " + this.getId());
                 } else {
                     this.setMoney(this.getMoney().subtract(amount));
                     result= amount;
