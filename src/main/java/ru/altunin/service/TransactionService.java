@@ -38,7 +38,9 @@ public class TransactionService {
         threadPool.shutdown();
         try {
             if (!threadPool.awaitTermination(60, TimeUnit.SECONDS)) {
-                threadPool.shutdownNow();
+                List<Runnable> unfurnishedTasks = threadPool.shutdownNow();
+                logger.warn("Незавершенные транзакции: "+unfurnishedTasks.size());
+                logger.warn("Незавершенные транзакции: "+unfurnishedTasks.stream().map(Object::toString).collect(Collectors.toList()));
             }
         } catch (InterruptedException ex) {
             threadPool.shutdownNow();

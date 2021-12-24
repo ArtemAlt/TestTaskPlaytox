@@ -1,5 +1,6 @@
 package ru.altunin.util;
 
+import java.math.BigDecimal;
 import java.util.Properties;
 import java.util.Random;
 
@@ -38,6 +39,10 @@ public class Utility {
             sb.append(str.charAt(number));
         }
         return sb.toString();
+    }
+
+    public static BigDecimal getStartAmount(){
+        return new BigDecimal(Integer.parseInt(appProps.getProperty("start_amount")));
     }
 
 }

@@ -18,7 +18,7 @@ public class ApplicationProperties {
         try {
             appProps.load(new FileInputStream(appConfigPath));
         } catch (IOException e) {
-            logger.error("Не найдет файл с настройками приложения");
+            logger.error("Не найден файл с настройками приложения");
         }
         return appProps;
     }
