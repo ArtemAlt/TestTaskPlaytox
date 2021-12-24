@@ -29,7 +29,7 @@ public class AccountService {
         }
     }
 
-    private synchronized void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException {
+    private void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException {
         logger.info("Начат перевод средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount);
         List<Account> accounts = new ArrayList<>();
         accounts.add(receiver);
@@ -51,9 +51,7 @@ public class AccountService {
     }
 
     public int countTotalAmount(List<Account> accounts) {
-        int sum = accounts.stream().mapToInt(a -> a.getCurrentAmount().intValue()).sum();
-        logger.info("Всего счетов - " + accounts.size() + ". Общая сумма на счетах - " + sum);
-        return sum;
+        return accounts.stream().mapToInt(a -> a.getCurrentAmount().intValue()).sum();
     }
 
     public void makeShuffleTransactionsWithRandomAmount(List<Account> accounts, int[] pair) {
