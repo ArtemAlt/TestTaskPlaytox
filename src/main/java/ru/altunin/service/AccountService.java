@@ -9,7 +9,6 @@ import ru.altunin.util.Utility;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -27,12 +26,10 @@ public class AccountService {
             logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена");
         } catch (BadAmountException e) {
             logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Некорректная сумма перевода");
-        } catch (InterruptedException e) {
-            logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена по таймауту");
         }
     }
 
-    private synchronized void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException, InterruptedException {
+    private synchronized void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException {
         logger.info("Начат перевод средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount);
         List<Account> accounts = new ArrayList<>();
         accounts.add(receiver);
