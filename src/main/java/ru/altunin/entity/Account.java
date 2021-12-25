@@ -48,7 +48,7 @@ public class Account {
                 this.setMoney(this.getMoney().add(amount));
             }
         } catch (InterruptedException e) {
-            logger.info("Внутренняя ошибка начисления " + this.getId());
+            logger.warn("Внутренняя ошибка начисления " + this.getId());
         } finally {
             this.isLocked = false;
             lock.unlock();
@@ -71,7 +71,7 @@ public class Account {
                 }
             }
         } catch (InterruptedException e) {
-            logger.info("Внутренняя ошибка списания " + this.getId());
+            logger.warn("Внутренняя ошибка списания " + this.getId());
         } finally {
             this.isLocked = false;
             lock.unlock();
