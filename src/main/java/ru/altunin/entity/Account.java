@@ -3,6 +3,7 @@ package ru.altunin.entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.altunin.errors.LimitAccountException;
+import ru.altunin.errors.MakeDebitException;
 import ru.altunin.util.Utility;
 
 import java.math.BigDecimal;
@@ -39,18 +40,23 @@ public class Account {
     }
 
     public void makeEnrolment(BigDecimal amount) throws InterruptedException {
-        Thread.sleep(Utility.getRandomDelay());
+//        Thread.sleep(Utility.getRandomDelay());
         this.setMoney(this.getMoney().add(amount));
     }
 
-    public void makeDebit(BigDecimal amount) throws LimitAccountException, InterruptedException {
+    public void makeDebit(BigDecimal amount) throws LimitAccountException, InterruptedException, MakeDebitException {
         BigDecimal newAccountMoneyValue = this.getMoney().subtract(amount);
-        Thread.sleep(Utility.getRandomDelay());
+//        Thread.sleep(Utility.getRandomDelay());
         if (newAccountMoneyValue.signum() < 0) {
             logger.info("Недостаточно средств на счете " + this.getId());
             throw new LimitAccountException("Недостаточно средств на счете " + this.getId());
         } else {
-            this.setMoney(this.getMoney().subtract(amount));
+            try {
+                this.setMoney(this.getMoney().subtract(amount));
+            } catch (Exception e){
+                throw new MakeDebitException("Внутренняя ошибка списания средств");
+            }
+
         }
     }
 
@@ -65,5 +71,7 @@ public class Account {
     public void unlockAccount() {
         lock.unlock();
     }
+
+
 }
 

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import ru.altunin.entity.Account;
 import ru.altunin.errors.BadAmountException;
 import ru.altunin.errors.LimitAccountException;
+import ru.altunin.errors.MakeDebitException;
 import ru.altunin.util.Utility;
 
 import java.math.BigDecimal;
@@ -26,13 +27,10 @@ public class AccountService {
             logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Не достаточно средств на счете отправителя");
         } catch (BadAmountException e) {
             logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Некорректная сумма перевода");
-        } catch (InterruptedException e) {
-            logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Фатальная ошибка перевода");
-
         }
     }
 
-    private void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException, InterruptedException {
+    private void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException {
         logger.info("Начат перевод средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount);
         List<Account> accounts = new ArrayList<>();
         accounts.add(receiver);
@@ -43,6 +41,16 @@ public class AccountService {
             accounts.get(1).lockAccount();
             sender.makeDebit(amount);
             receiver.makeEnrolment(amount);
+        } catch (MakeDebitException e) {
+            try {
+                sender.makeEnrolment(amount);
+            } catch (InterruptedException ex) {
+                logger.error("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена." +
+                        " Фатальная ошибка перевода. Средства в объеме - " + amount + ". Переведены на счет - " + sender.getId());
+            }
+        } catch (InterruptedException e) {
+            logger.error("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена." +
+                    " Фатальная ошибка перевода. Средства в объеме - " + amount + ". Переведены на счет - " + sender.getId());
         } finally {
             accounts.get(0).unlockAccount();
             accounts.get(1).unlockAccount();
