@@ -26,17 +26,26 @@ public class AccountService {
             logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Не достаточно средств на счете отправителя");
         } catch (BadAmountException e) {
             logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Некорректная сумма перевода");
+        } catch (InterruptedException e) {
+            logger.warn("Транзакция перевода средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount + ". Отменена. Фатальная ошибка перевода");
+
         }
     }
 
-    private void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException {
+    private void makeDebit(Account sender, Account receiver, BigDecimal amount) throws LimitAccountException, InterruptedException {
         logger.info("Начат перевод средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " сумма транзакции  - " + amount);
         List<Account> accounts = new ArrayList<>();
         accounts.add(receiver);
         accounts.add(sender);
         accounts.sort(comparator);
-        if (!accounts.get(0).isLock() && !accounts.get(1).isLock()) {
-            receiver.makeEnrolment(sender.makeDebit(amount));
+        try {
+            accounts.get(0).lockAccount();
+            accounts.get(1).lockAccount();
+            sender.makeDebit(amount);
+            receiver.makeEnrolment(amount);
+        } finally {
+            accounts.get(0).unlockAccount();
+            accounts.get(1).unlockAccount();
         }
         logger.info("Завершен перевод средств с аккаунта " + sender.getId() + " на аккаунт " + receiver.getId() + " итоговый счет аккаунта отправителя - " + sender.getCurrentAmount() + " Итоговый счет аккаунта получателя - " + receiver.getCurrentAmount());
     }
