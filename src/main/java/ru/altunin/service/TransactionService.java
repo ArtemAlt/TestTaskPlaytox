@@ -31,18 +31,14 @@ public class TransactionService {
     public void start(String totalTransactions) {
         for (int i = 0; i < Integer.parseInt(totalTransactions); i++) {
             threadPool.execute(() -> {
-                try {
-                    Thread.sleep(Utility.getRandomDelay());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 int[] accountPair = Utility.getRandomPairByLimit(getTotalAccounts());
                 service.makeShuffleTransactionsWithRandomAmount(accountList, accountPair);
             });
         }
+
         threadPool.shutdown();
         try {
-            if (!threadPool.awaitTermination(60, TimeUnit.SECONDS)) {
+            if (!threadPool.awaitTermination(6000000, TimeUnit.SECONDS)) {
                 List<Runnable> unfurnishedTasks = threadPool.shutdownNow();
                 logger.warn("Незавершенные транзакции: "+unfurnishedTasks.size());
                 logger.warn("Незавершенные транзакции: "+unfurnishedTasks.stream().map(Object::toString).collect(Collectors.toList()));

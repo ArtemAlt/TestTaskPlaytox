@@ -40,23 +40,27 @@ public class Account {
         return "Account id: " + id + " total money= " + money;
     }
 
-    public void makeEnrolment(BigDecimal amount) {
+    public synchronized void makeEnrolment(BigDecimal amount) {
         try {
             if (lock.tryLock()) {
                 this.isLocked = true;
+                Thread.sleep(Utility.getRandomDelay());
                 this.setMoney(this.getMoney().add(amount));
             }
+        } catch (InterruptedException e) {
+            logger.info("Внутренняя ошибка начисления " + this.getId());
         } finally {
             this.isLocked = false;
             lock.unlock();
         }
     }
 
-    public BigDecimal makeDebit(BigDecimal amount) throws LimitAccountException {
+    public synchronized BigDecimal makeDebit(BigDecimal amount) throws LimitAccountException {
         BigDecimal result = BigDecimal.valueOf(0);
         try {
             if (lock.tryLock()) {
                 BigDecimal newAccountMoneyValue = this.getMoney().subtract(amount);
+                Thread.sleep(Utility.getRandomDelay());
                 if (newAccountMoneyValue.signum() < 0) {
                     this.isLocked = false;
                     logger.info("Недостаточно средств на счете " + this.getId());
@@ -66,6 +70,8 @@ public class Account {
                     result= amount;
                 }
             }
+        } catch (InterruptedException e) {
+            logger.info("Внутренняя ошибка списания " + this.getId());
         } finally {
             this.isLocked = false;
             lock.unlock();
@@ -73,7 +79,7 @@ public class Account {
         return result;
     }
 
-    public boolean isLock() {
+    public synchronized boolean isLock() {
         return this.isLocked;
     }
 
